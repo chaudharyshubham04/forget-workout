@@ -14,7 +14,7 @@ Made with ♥ by Shubham
 
 ```bash
 node scripts/serve.js 8080
-```
+``` 
 
 Open <http://localhost:8080>. Any static file server works.
 
