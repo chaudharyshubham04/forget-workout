@@ -400,7 +400,9 @@ console.log('\nDeployable build');
     eq(JSON.parse(readFileSync('.tmp-dist/js/data/app-config.json', 'utf8')).media, false,
       'the build tells the app that media is absent');
     ok(existsSync('.tmp-dist/.nojekyll'), 'GitHub Pages marker');
-    ok(existsSync('.tmp-dist/_redirects'), 'SPA fallback for Netlify/Cloudflare');
+    ok(existsSync('.tmp-dist/_headers'), 'cache headers for the host');
+    ok(!existsSync('.tmp-dist/_redirects'),
+      'no SPA fallback — hash routing needs none, and it would mask 404s');
     rmSync('.tmp-dist', { recursive: true, force: true });
   });
 }

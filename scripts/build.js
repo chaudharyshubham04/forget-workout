@@ -62,7 +62,9 @@ if (withMedia) {
 /* GitHub Pages skips files and folders starting with an underscore unless told not to. */
 await writeFile(join(OUT, '.nojekyll'), '');
 
-/* Caching rules understood by Netlify and Cloudflare Pages. */
+/* Caching rules understood by Netlify, Cloudflare Pages and Workers assets.
+   No _redirects file: routing is hash-based, so every request maps to a real
+   file and an SPA fallback would only mask genuine 404s. */
 await writeFile(join(OUT, '_headers'), `/sw.js
   Cache-Control: no-cache
 
@@ -78,9 +80,6 @@ await writeFile(join(OUT, '_headers'), `/sw.js
 /*
   Cache-Control: public, max-age=0, must-revalidate
 `);
-
-/* Hash routing means every path is served by index.html. */
-await writeFile(join(OUT, '_redirects'), '/*  /index.html  200\n');
 
 const { total, files } = await dirSize(OUT);
 console.log(`\nBuilt ${OUT}/ — ${files} files, ${(total / 1048576).toFixed(1)} MB`);

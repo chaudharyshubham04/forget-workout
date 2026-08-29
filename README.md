@@ -189,24 +189,31 @@ The build sets cache headers, an SPA fallback and a `.nojekyll` marker for you.
 All paths are relative, so serving from `example.com/forge/` works exactly the
 same as from a root domain.
 
-### Cloudflare Pages, step by step
+### Cloudflare, step by step
 
 1. <https://dash.cloudflare.com> → **Workers & Pages** → **Create** →
-   **Pages** → **Connect to Git**, and pick the repository.
+   **Connect to Git**, and pick the repository.
 2. Build settings:
    - Framework preset — **None**
    - Build command — `node scripts/build.js`
    - Build output directory — `dist`
    - Root directory — leave empty
-3. **Save and Deploy.** First build takes about a minute; you get a
-   `<project>.pages.dev` URL, HTTPS included.
+3. **Save and Deploy.** First build takes about a minute; HTTPS is included.
 
 Every push to `main` redeploys automatically, and pull requests get their own
 preview URL. `.node-version` pins the builder to Node 20.
 
-Cloudflare reads `_headers` and `_redirects` from `dist/` — both are written by
-the build, so caching and the SPA fallback are already handled. It ignores
-`netlify.toml`, which is only there for Netlify.
+[`wrangler.jsonc`](wrangler.jsonc) points the deploy at `dist/`. **This matters:**
+Cloudflare's newer Workers projects install wrangler into the repo and, without
+that config, upload the entire working directory as assets — including
+`node_modules/workerd/bin/workerd`, a 146 MiB binary that blows the 25 MiB
+per-asset limit and fails the deploy with `[ERROR] Asset too large`.
+
+Cloudflare reads `_headers` from `dist/`, which the build writes, so caching is
+handled. There is deliberately no `_redirects`: routing is hash-based
+(`/#/progress`), so every request maps to a real file and an SPA fallback would
+only turn genuine 404s into 200s serving HTML. It ignores `netlify.toml`, which
+is there for Netlify.
 
 To add your own domain: project → **Custom domains** → add it. DNS is
 configured for you if the domain is already on Cloudflare.

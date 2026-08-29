@@ -1,0 +1,19 @@
+{
+  // Cloudflare Workers static-asset deployment.
+  //
+  // Without this, wrangler uploads the whole repository — including its own
+  // node_modules/workerd binary, which exceeds the 25 MiB per-asset limit and
+  // fails the deploy. Pointing `assets.directory` at the build output means only
+  // the 57 files in dist/ are uploaded.
+  //
+  // Build command: node scripts/build.js
+  "name": "forge",
+  "compatibility_date": "2025-01-01",
+  "assets": {
+    "directory": "./dist",
+    // Routing is hash-based (/#/progress), so every request is for a real file.
+    // A single-page-application fallback would turn missing assets into 200s
+    // serving HTML, which hides genuine 404s.
+    "not_found_handling": "none"
+  }
+}
