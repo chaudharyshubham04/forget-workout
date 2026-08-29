@@ -1,0 +1,11 @@
+{
+  "name": "forge-workout-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline-first gym workout tracker PWA. No build step, no dependencies.",
+  "scripts": {
+    "start": "node scripts/serve.js",
+    "test": "node scripts/test.js"
+  }
+}

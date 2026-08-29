@@ -1,0 +1,12 @@
+# Exercise media is © Gym visual and licensed separately from this code.
+# Keep it out of version control so it is never redistributed by accident —
+# see ATTRIBUTION.md. Re-fetch with:
+#   git clone --depth 1 https://github.com/hasaneyldrm/exercises-dataset.git /tmp/exdata
+#   cp -R /tmp/exdata/images media/images && cp -R /tmp/exdata/videos media/videos
+media/images/
+media/videos/
+
+.DS_Store
+node_modules/
+dist/
+.tmp-dist/

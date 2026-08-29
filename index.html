@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=5">
+<title>Forge — Workout Tracker</title>
+<meta name="description" content="Track workouts, exercises, splits and progressive overload.">
+<meta name="theme-color" content="#0b0d12" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Forge">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="boot" class="boot">
+  <div class="boot-mark"></div>
+</div>
+
+<div id="app" class="app" hidden>
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <div class="resume-host" id="resume-host"></div>
+    <main class="outlet" id="outlet" tabindex="-1"></main>
+  </div>
+  <nav class="tabbar" id="tabbar"></nav>
+</div>
+
+<div class="toast-host" id="toast-host" aria-live="polite"></div>
+<div class="sheet-host" id="sheet-host"></div>
+<div class="modal-host" id="modal-host"></div>
+<div class="confetti-host" id="confetti-host" aria-hidden="true"></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
