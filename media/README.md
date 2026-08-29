@@ -25,3 +25,11 @@ cp -R /tmp/exdata/videos media/videos
 
 To run the app without this media, clear **Settings → Library → Exercise media**
 and it falls back to the built-in animated SVG diagrams.
+
+
+
+#============ OTHER MEIDA
+
+https://github.com/ExerciseDB/exercisedb-api
+https://github.com/yuhonas/free-exercise-db
+https://api.musclewiki.com/
