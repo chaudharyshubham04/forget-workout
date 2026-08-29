@@ -154,6 +154,50 @@ console.log('\nImported library (exercises-dataset)');
   });
 }
 
+/* ---------------- public-domain library ---------------- */
+console.log('\nPublic-domain library (free-exercise-db)');
+{
+  const { readFileSync, existsSync } = await import('node:fs');
+  const open = JSON.parse(readFileSync('js/data/exercises-open.json', 'utf8'));
+  const attach = JSON.parse(readFileSync('js/data/open-media.json', 'utf8'));
+  const tax2 = await import('../js/data/taxonomy.js');
+  const M2 = new Set(tax2.MUSCLES.map((m) => m.id));
+  const E2 = new Set(tax2.EQUIPMENT.map((e) => e.id));
+  const C2 = new Set(tax2.CATEGORIES.map((c) => c.id));
+  const pose2 = await import('../js/lib/motion.js');
+  const P2 = new Set(pose2.poseIds());
+
+  t('the public-domain set imports and maps onto the taxonomy', () => {
+    ok(open.length > 600, `expected 600+, got ${open.length}`);
+    for (const e of open) {
+      for (const m of [...e.primaryMuscles, ...e.secondaryMuscles]) ok(M2.has(m), `${e.id}: muscle ${m}`);
+      for (const q of e.equipment) ok(E2.has(q), `${e.id}: equipment ${q}`);
+      for (const c of e.categories) ok(C2.has(c), `${e.id}: category ${c}`);
+      ok(P2.has(e.pose), `${e.id}: pose ${e.pose}`);
+    }
+  });
+  t('every public-domain entry carries photos and instructions', () => {
+    const bad = open.filter((e) => !e.media?.open || !e.media.images?.length || !e.instructions.length);
+    eq(bad.length, 0, bad.slice(0, 3).map((e) => e.id).join());
+  });
+  t('public-domain photos are installed and resolve', () => {
+    if (!existsSync('media/open')) { ok(true, 'not installed in this checkout'); return; }
+    const sample = open.filter((_, i) => i % 61 === 0);
+    for (const e of sample) {
+      for (const img of e.media.images) ok(existsSync(`media/${img}`), `missing ${img} for ${e.id}`);
+    }
+  });
+  t('photos attached to existing exercises point at real files', () => {
+    if (!existsSync('media/open')) { ok(true, 'not installed in this checkout'); return; }
+    for (const [, m] of Object.entries(attach)) ok(existsSync(`media/${m.image}`), `missing ${m.image}`);
+  });
+  t('ids never collide across the three sources', () => {
+    const imported = JSON.parse(readFileSync('js/data/exercises-extended.json', 'utf8'));
+    const all = [...EXERCISES.map((e) => e.id), ...imported.map((e) => e.id), ...open.map((e) => e.id)];
+    eq(new Set(all).size, all.length, 'all exercise ids are unique');
+  });
+}
+
 /* ---------------- store ---------------- */
 console.log('\nStore');
 S.load();
@@ -162,10 +206,11 @@ t('starts un-onboarded with the curated library visible', () => {
   eq(S.exercises().length, 98);
 });
 const extLoaded = await S.loadExtendedLibrary();
-t('the imported library merges into the visible library', () => {
-  ok(extLoaded.length > 1000, `loaded ${extLoaded.length}`);
+t('both imported libraries merge into the visible library', () => {
+  ok(extLoaded.length > 1900, `loaded ${extLoaded.length}`);
   eq(S.exercises().length, 98 + extLoaded.length);
   ok(S.exerciseById(extLoaded[0].id), 'an imported exercise resolves by id');
+  ok(S.openCount() > 600, `public-domain entries loaded: ${S.openCount()}`);
 });
 t('custom exercises add to the library', () => {
   const before = S.exercises().length;
@@ -378,8 +423,8 @@ t('exercises are labelled by where they came from', async () => {});
   results.pop(); pass--;
   t('exercises are labelled by where they came from', () => {
     eq(exerciseTier(S.exerciseById('barbell-bench-press')).id, 'curated');
-    const imported = S.exercises().find((e) => e.source === 'exercises-dataset');
-    eq(exerciseTier(imported).id, 'imported');
+    eq(exerciseTier(S.exercises().find((e) => e.source === 'exercises-dataset')).id, 'imported');
+    eq(exerciseTier(S.exercises().find((e) => e.source === 'free-exercise-db')).id, 'imported');
     const mine = S.createExercise({ name: 'Tier check' });
     eq(exerciseTier(mine).id, 'custom');
     S.deleteExercise(mine.id);
@@ -396,9 +441,11 @@ console.log('\nDeployable build');
     ok(existsSync('.tmp-dist/index.html'), 'index.html is built');
     ok(existsSync('.tmp-dist/sw.js'), 'the service worker is built');
     ok(existsSync('.tmp-dist/js/data/exercises-extended.json'), 'the exercise library is built');
-    ok(!existsSync('.tmp-dist/media'), 'no licensed media is included');
-    eq(JSON.parse(readFileSync('.tmp-dist/js/data/app-config.json', 'utf8')).media, false,
-      'the build tells the app that media is absent');
+    eq(JSON.parse(readFileSync('.tmp-dist/js/data/app-config.json', 'utf8')).licensedMedia, false,
+      'the build tells the app the licensed media is absent');
+    ok(existsSync('.tmp-dist/media/open'), 'public-domain photos ARE published');
+    ok(!existsSync('.tmp-dist/media/videos'), 'Gym visual GIFs are not published');
+    ok(!existsSync('.tmp-dist/media/images'), 'Gym visual photos are not published');
     ok(existsSync('.tmp-dist/.nojekyll'), 'GitHub Pages marker');
     ok(existsSync('.tmp-dist/_headers'), 'cache headers for the host');
     ok(!existsSync('.tmp-dist/_redirects'),
@@ -452,10 +499,19 @@ console.log('\nLicensed media hook');
     eq(media.hasMedia(sample), false);
     S.setSetting('mediaBase', 'media');
   });
-  t('curated exercises matched in the dataset also carry media', () => {
-    const bench = S.exerciseById('barbell-bench-press');
-    ok(bench.media && bench.media.gif, 'the curated bench press has a media reference');
-    ok(media.gifFor(bench).startsWith('media/videos/'));
+  t('public-domain photos resolve even when the licensed set is absent', () => {
+    const openEx = S.exercises().find((e) => e.media && e.media.open);
+    ok(openEx, 'a public-domain exercise exists');
+    const frames = media.framesFor(openEx);
+    ok(frames && frames.length >= 1, 'photo frames resolve');
+    ok(frames[0].startsWith('media/open/'));
+    ok(media.creditFor(openEx).includes('Public domain'));
+  });
+  t('an exercise carrying only Gym visual media is gated on the licence', () => {
+    const gv = S.exercises().find((e) => e.media && e.media.gif && !e.media.open);
+    if (!gv) { ok(true, 'none in this build'); return; }
+    ok(media.gifFor(gv), 'resolves while the licensed set is present');
+    ok(media.creditFor(gv).includes('Gym visual'), 'attribution is required for it');
   });
 }
 

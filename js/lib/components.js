@@ -6,7 +6,7 @@ import { muscleGlyph } from './anatomy.js';
 import { DIFFICULTIES, SET_TYPES } from '../data/taxonomy.js';
 import { fmtWeight, fmtNum, relDay, compactNum } from './utils.js';
 import { sheet, toast, emptyState } from './ui.js';
-import { gifFor, imageFor, hasMedia, ATTRIBUTION } from './media.js';
+import { gifFor, imageFor, framesFor, hasMedia, creditFor } from './media.js';
 import { matchScore } from './utils.js';
 
 export const diffOf = (id) => DIFFICULTIES.find((d) => d.id === id) || DIFFICULTIES[0];
@@ -19,7 +19,9 @@ export const diffOf = (id) => DIFFICULTIES.find((d) => d.id === id) || DIFFICULT
 export function exerciseTier(ex) {
   if (!ex) return null;
   if (ex.custom) return { id: 'custom', label: 'Custom', cls: 'tag-info' };
-  if (ex.source === 'exercises-dataset') return { id: 'imported', label: 'Imported', cls: '' };
+  /* Anything with a `source` came from an imported dataset; only the 98
+     written for this app count as curated. */
+  if (ex.source) return { id: 'imported', label: 'Imported', cls: '' };
   return { id: 'curated', label: 'Curated', cls: 'tag-accent' };
 }
 /** Small dot badge for dense list rows. */
@@ -41,17 +43,41 @@ export function demoPlayer(exercise, { badge = true, autoplay = true } = {}) {
   const holder = h('.demo');
 
   const buildMedia = () => {
-    const src = gifFor(exercise) || imageFor(exercise);
-    /* The source artwork is drawn on white, so the frame is given a matching
-       backdrop rather than letterboxing it against the dark surface. */
+    /* Gym visual's illustrations are drawn on white, so they get a white
+       backdrop. The public-domain files are real photographs (mostly 3:2 in a
+       4:3 frame) and need a neutral one, or the letterbox bars read as a bug. */
     holder.classList.add('demo-media');
+    holder.classList.toggle('demo-photo', !!exercise.media?.open);
+    const gif = gifFor(exercise);
+    const frames = gif ? null : framesFor(exercise);
+    let node;
+    if (gif) {
+      node = h('img', { src: gif, alt: `${exercise.name} demonstration`, loading: 'lazy',
+        onerror: () => { useMedia = false; build(); } });
+    } else if (frames && frames.length > 1) {
+      /* Two stills (start and end position) cross-faded on a loop — enough to
+         read the movement without a video file. */
+      node = h('.demo-frames', { style: { '--frame-dur': `${1.4 / speed}s` } },
+        ...frames.map((src, i) => h('img', {
+          src, alt: i === 0 ? `${exercise.name}, start position` : `${exercise.name}, end position`,
+          class: paused && i > 0 ? 'frame hidden' : 'frame',
+          style: { animationDelay: `${i * (0.7 / speed)}s`,
+            animationPlayState: paused ? 'paused' : 'running' },
+          onerror: () => { useMedia = false; build(); } })));
+    } else {
+      node = h('img', { src: frames ? frames[0] : imageFor(exercise),
+        alt: `${exercise.name} demonstration`, loading: 'lazy',
+        onerror: () => { useMedia = false; build(); } });
+    }
     mount(holder,
-      h('img', { src, alt: `${exercise.name} demonstration`, loading: 'lazy',
-        style: { width: '100%', height: '100%', objectFit: 'contain' },
-        onerror: () => { useMedia = false; build(); } }),
+      node,
       badge ? h('.demo-badge', (exercise.movement || 'movement').toUpperCase()) : null,
-      h('.demo-attr', { title: ATTRIBUTION }, ATTRIBUTION),
+      h('.demo-attr', { title: creditFor(exercise) }, creditFor(exercise)),
       h('.demo-ctl',
+        framesFor(exercise) && !gif
+          ? h('button.iconbtn', { 'aria-label': paused ? 'Play' : 'Pause',
+              onclick: () => { paused = !paused; build(); } }, icon(paused ? 'play' : 'pause'))
+          : null,
         h('button.iconbtn', { 'aria-label': 'Show the diagram instead',
           title: 'Switch to the animated diagram',
           onclick: () => { useMedia = false; build(); } }, icon('user', 17))));

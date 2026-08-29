@@ -5,6 +5,7 @@
 #   cp -R /tmp/exdata/images media/images && cp -R /tmp/exdata/videos media/videos
 media/images/
 media/videos/
+# media/open/ is public domain (Unlicense) and is intentionally committed.
 
 .DS_Store
 node_modules/

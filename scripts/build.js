@@ -43,20 +43,31 @@ for (const item of SHIP) {
   await cp(item, join(OUT, item), { recursive: true });
 }
 
+/* Public-domain photos (Unlicense) ship in every build. */
+if (existsSync('media/open')) {
+  await mkdir(join(OUT, 'media'), { recursive: true });
+  await cp('media/open', join(OUT, 'media/open'), { recursive: true });
+  const n = (await dirSize(join(OUT, 'media/open'))).files;
+  console.log(`Public-domain photos included — ${n} files.`);
+} else {
+  console.log('No media/open folder — run scripts/import-open-db.js to add photos.');
+}
+
 if (withMedia) {
   if (!existsSync('media/videos')) {
-    console.error('media/ is not installed — see media/README.md');
+    console.error('media/images and media/videos are not installed — see media/README.md');
     process.exit(1);
   }
-  await cp('media', join(OUT, 'media'), { recursive: true });
-  console.log('⚠  Media INCLUDED. Those files are © Gym visual and are not');
-  console.log('   covered by the dataset\'s MIT licence. Publish only with your');
-  console.log('   own licence from https://gymvisual.com/ — see ATTRIBUTION.md.');
+  await mkdir(join(OUT, 'media'), { recursive: true });
+  await cp('media/images', join(OUT, 'media/images'), { recursive: true });
+  await cp('media/videos', join(OUT, 'media/videos'), { recursive: true });
+  console.log('⚠  Gym visual media INCLUDED. Those files are not covered by the');
+  console.log('   dataset\'s MIT licence. Publish only with your own licence from');
+  console.log('   https://gymvisual.com/ — see ATTRIBUTION.md.');
 } else {
-  /* Tell the app the media is absent so it never requests missing files. */
-  await writeFile(join(OUT, 'js/data/app-config.json'), JSON.stringify({ media: false }));
-  /* Drop the media entries from the service worker precache list if present. */
-  console.log('Media excluded — the app uses its own SVG animations.');
+  /* Tell the app the licensed set is absent so it never requests missing files. */
+  await writeFile(join(OUT, 'js/data/app-config.json'), JSON.stringify({ licensedMedia: false }));
+  console.log('Gym visual media excluded (not licensed for redistribution).');
 }
 
 /* GitHub Pages skips files and folders starting with an underscore unless told not to. */

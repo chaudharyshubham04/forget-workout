@@ -23,7 +23,7 @@ To install it as a real app: open it in Chrome/Edge/Safari and choose
 home screen and works with no connection at all.
 
 ```bash
-node scripts/test.js     # 84 checks
+node scripts/test.js     # 90 checks
 ```
 
 ---
@@ -32,11 +32,11 @@ node scripts/test.js     # 84 checks
 
 | | |
 |---|---|
-| **Exercises** | **1,398** — 98 hand-written + 1,300 imported |
-| **Demonstrations** | 1,324 animation GIFs and photos, plus 45 procedural SVG animations as a fallback for everything else |
+| **Exercises** | **2,115** — 98 hand-written + 2,017 imported from two open datasets |
+| **Demonstrations** | 868 photo demonstrations (public domain, published), 1,324 animation GIFs (local only, licensed separately), and 45 procedural SVG animations covering everything else |
 | **Splits** | 14 predefined, from Full Body 3× to a 6-day Push/Pull/Legs/Core/Upper/Lower |
 | **Storage** | localStorage for data, IndexedDB for progress photos — entirely on-device |
-| **Size** | 2.4 MB app + 137 MB optional media; the exercise library is 162 KB gzipped |
+| **Size** | 97 MB deployed (2.2 MB app + 95 MB public-domain photos); 137 MB more if you licence the GIFs |
 
 ### Screens
 
@@ -101,7 +101,8 @@ The library has three tiers, all flowing through the same override system:
 | Tier | Count | Detail |
 |---|---|---|
 | **Curated** | 98 | Written for this project: description, step-by-step instructions, common mistakes, safety tips, form cues, alternatives, variations, similar exercises |
-| **Imported** | 1,300 | Names, taxonomy and English step-by-step instructions |
+| **Imported** | 1,300 | [exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset) (MIT) — names, taxonomy, English instructions |
+| **Imported** | 717 | [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (Unlicense) — same, **plus public-domain photographs** |
 | **Custom** | yours | Anything you create in-app |
 
 ### Where the imported data comes from
@@ -141,27 +142,27 @@ Every exercise carries a tag so you know what you are looking at:
 - *(untagged)* — imported: name, taxonomy and step-by-step instructions.
 - **Custom** — created by you.
 
-### Exercise media — © Gym visual, licensed separately
+### Exercise media, and what is publishable
 
-`media/` holds 1,324 animation GIFs and 1,324 photos from the same dataset
-repository. **They are © Gym visual (<https://gymvisual.com/>) and are not
-covered by that project's MIT licence** — its LICENSE states that cloning grants
-no rights to the media.
+Three tiers, in the order the app prefers them:
 
-The app renders the required attribution "© Gym visual —
-https://gymvisual.com/" on every media frame. **Obtain your own licence from Gym
-visual before distributing this app publicly.**
+1. **Public-domain photographs** — `media/open/`, from free-exercise-db under
+   the Unlicense. 868 exercises get two stills (start and end position) which
+   the app cross-fades to animate the movement. **These ship in the deployed
+   build**, because public domain carries no redistribution restriction.
+2. **Gym visual GIFs** — `media/images/` and `media/videos/`, 1,324 animations.
+   © Gym visual and **excluded from the build by default**: their terms state
+   the media "cannot be transmitted to another party" and may not be
+   "redistributed". Their §6.1 *does* explicitly permit app and website use
+   once you buy a licence, so `--with-media` is there for when you have one.
+3. **Procedural SVG animations** — `js/lib/motion.js`, written for this
+   project. A keyframed anatomical figure with the equipment drawn in and the
+   trained muscles highlighted. Covers every exercise with no assets at all,
+   and is the fallback wherever no photo exists.
 
-The media is optional. Clear **Settings → Library → Exercise media** (or delete
-the `media/` folder, saving ~137 MB) and every exercise falls back to a
-procedurally generated SVG animation written for this project
-(`js/lib/motion.js`): a keyframed anatomical figure with the equipment drawn in
-and the trained muscles highlighted. 45 animations cover all 1,398 exercises,
-need no assets and work offline.
-
-Because the GIFs total ~125 MB they are **not** precached — the service worker
-caches each one the first time you view it, so the app installs fast and the
-exercises you actually use become available offline.
+Media is never precached — the service worker caches each file the first time
+you view it, so the app installs fast and the exercises you actually use become
+available offline.
 
 See [ATTRIBUTION.md](ATTRIBUTION.md) for the full licence positions.
 
@@ -170,7 +171,7 @@ See [ATTRIBUTION.md](ATTRIBUTION.md) for the full licence positions.
 ## Deploy it for free
 
 ```bash
-node scripts/build.js      # → dist/, 2.2 MB, 57 files
+node scripts/build.js      # → dist/, 97 MB, 1,805 files
 ```
 
 `dist/` is a plain static folder. Drop it on any free host — it needs no server,
@@ -279,7 +280,7 @@ scripts/                  serve, test, import-dataset, sw-test, dom-stub
 node scripts/test.js
 ```
 
-84 checks across: data integrity, the element factory, the imported library's
+90 checks across: data integrity, the element factory, the imported library's
 taxonomy mapping, the store and its override system, set-level logging, PR
 detection, analytics, the progressive-overload engine (including plateau and
 deload detection), the media layer, schema migrations, weekday plan

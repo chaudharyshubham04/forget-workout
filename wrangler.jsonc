@@ -7,7 +7,11 @@
   // the 57 files in dist/ are uploaded.
   //
   // Build command: node scripts/build.js
-  "name": "forge",
+  //
+  // `name` must match the Cloudflare Workers project this repo is linked to.
+  // If it does not, `wrangler deploy` silently creates a second Worker under
+  // that name instead of updating the existing one.
+  "name": "forget-workout",
   "compatibility_date": "2025-01-01",
   "assets": {
     "directory": "./dist",

@@ -20,6 +20,29 @@ curl -sSL -o /tmp/ex-dataset.json \
 node scripts/import-dataset.js /tmp/ex-dataset.json
 ```
 
+## free-exercise-db — exercises and photographs (Unlicense / public domain)
+
+Source: <https://github.com/yuhonas/free-exercise-db>
+Released under the **Unlicense** — dedicated to the public domain, data *and*
+images, with no attribution requirement and no restriction on redistribution.
+
+`js/data/exercises-open.json` and `media/open/` are generated from it by
+`scripts/import-open-db.js`: 717 exercises with photographs, plus photographs
+attached to 151 exercises already in the library. Two stills per exercise
+(start and end position), which the app cross-fades to animate the movement.
+
+Because they are public domain, **these are the photos that ship in the
+deployed build.** The app credits the project anyway, which is courtesy rather
+than obligation.
+
+Regenerate with:
+
+```bash
+git clone --depth 1 https://github.com/yuhonas/free-exercise-db.git /tmp/freedb
+node scripts/import-open-db.js /tmp/freedb
+cp -R /tmp/freedb/exercises/. media/open/ && find media/open -name '*.json' -delete
+```
+
 ## Exercise media — © Gym visual, licensed separately
 
 `media/images/` (1,324 photos) and `media/videos/` (1,324 animation GIFs) come
@@ -47,11 +70,17 @@ That project's LICENSE carries a media exception:
 
 ### Running without it
 
-The media is entirely optional. Clear **Settings → Library → Exercise media**
-and every exercise falls back to a procedurally generated SVG animation
-(`js/lib/motion.js`) written for this project — no third-party assets, no
-licensing question, and it works offline. Delete the `media/` folder to drop
-~137 MB.
+This media is entirely optional and is **excluded from the deployed build by
+default** (`scripts/build.js`). Exercises fall back to the public-domain photos
+above where available, and otherwise to a procedurally generated SVG animation
+(`js/lib/motion.js`) written for this project. Delete `media/images` and
+`media/videos` to drop ~137 MB.
+
+Per Gym visual's Terms & Conditions §6.1, a purchased licence *does* explicitly
+permit use in "Android or iOS mobile application (apps)" and "website pages and
+headers" — so licensing it legitimately unlocks this. §5 and §6.2 are equally
+explicit that without one the media "cannot be transmitted to another party" and
+may not be "resold or redistributed".
 
 ## Everything else
 

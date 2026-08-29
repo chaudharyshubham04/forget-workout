@@ -175,7 +175,9 @@ const SYS_EX = EXERCISES.map((e) => ({
 /* The imported library (1,300 exercises, ~1.6 MB) is fetched once and cached by
    the service worker. Kept out of the main bundle so first paint stays fast. */
 let EXT_EX = [];
-let CURATED_MEDIA = {};
+let OPEN_EX = [];
+let CURATED_MEDIA = {};   // Gym visual references (licensed separately)
+let OPEN_MEDIA = {};      // public-domain photo references
 let MEDIA_AVAILABLE = true;
 let extPromise = null;
 export function loadExtendedLibrary() {
@@ -183,28 +185,35 @@ export function loadExtendedLibrary() {
   const j = (u) => fetch(u).then((r) => (r.ok ? r.json() : null)).catch(() => null);
   extPromise = Promise.all([
     j('js/data/exercises-extended.json'),
+    j('js/data/exercises-open.json'),
     j('js/data/curated-media.json'),
+    j('js/data/open-media.json'),
     j('js/data/app-config.json'),
-  ]).then(([list, media, config]) => {
+  ]).then(([list, open, media, openMedia, config]) => {
     EXT_EX = Array.isArray(list) ? list : [];
+    OPEN_EX = Array.isArray(open) ? open : [];
     CURATED_MEDIA = media && typeof media === 'object' ? media : {};
-    /* Builds that omit the separately-licensed media say so here, so the app
-       goes straight to the SVG diagrams instead of requesting missing files. */
-    if (config && config.media === false) MEDIA_AVAILABLE = false;
+    OPEN_MEDIA = openMedia && typeof openMedia === 'object' ? openMedia : {};
+    /* Builds published without the separately-licensed Gym visual media say so
+       here, so the app never requests files that are not there. The
+       public-domain photos always ship. */
+    if (config && config.licensedMedia === false) MEDIA_AVAILABLE = false;
     exCache = null;
-    return EXT_EX;
+    return [...EXT_EX, ...OPEN_EX];
   }).catch((e) => { console.warn('Extended library unavailable', e); EXT_EX = []; return []; });
   return extPromise;
 }
 export const curatedMediaFor = (id) => CURATED_MEDIA[id] || null;
-/** False when this build was published without the licensed media. */
+/** False when this build was published without the licensed Gym visual media.
+    Public-domain photos are unaffected. */
 export const mediaAvailable = () => MEDIA_AVAILABLE;
+export const openCount = () => OPEN_EX.length;
 export const extendedCount = () => EXT_EX.length;
 export const extendedLoaded = () => EXT_EX.length > 0;
 
 let exCache = null, exCacheKey = '';
 function exKey() {
-  return `${Object.keys(state.exerciseOverrides).length}:${state.customExercises.length}:${state.hiddenExercises.length}:${EXT_EX.length}:${state._exStamp || 0}`;
+  return `${Object.keys(state.exerciseOverrides).length}:${state.customExercises.length}:${state.hiddenExercises.length}:${EXT_EX.length}:${OPEN_EX.length}:${state._exStamp || 0}`;
 }
 /** All visible exercises: system (with overrides applied) + custom. */
 export function exercises() {
@@ -215,10 +224,16 @@ export function exercises() {
     (state.exerciseOverrides[e.id] ? { ...e, ...state.exerciseOverrides[e.id], id: e.id, custom: false, edited: true } : e);
   /* 24 curated exercises have a matching record in the imported dataset; give
      them its media reference so they show a photo demonstration too. */
-  const withMedia = (e) => (CURATED_MEDIA[e.id] ? { ...e, media: CURATED_MEDIA[e.id] } : e);
+  /* Photos matched from either dataset are attached here. Public-domain ones
+     win, because they can actually be published. */
+  const withMedia = (e) => {
+    const m = OPEN_MEDIA[e.id] || CURATED_MEDIA[e.id];
+    return m ? { ...e, media: m } : e;
+  };
   const list = [
     ...SYS_EX.filter((e) => !hidden.has(e.id)).map(withMedia).map(applyOverride),
-    ...EXT_EX.filter((e) => !hidden.has(e.id)).map(applyOverride),
+    ...EXT_EX.filter((e) => !hidden.has(e.id)).map(withMedia).map(applyOverride),
+    ...OPEN_EX.filter((e) => !hidden.has(e.id)).map(applyOverride),
     ...state.customExercises,
   ];
   exCache = list; exCacheKey = k;
@@ -230,8 +245,10 @@ export function exerciseIndex() {
   return idx;
 }
 export const exerciseById = (id) => exerciseIndex()[id] || null;
-export const isSystemExercise = (id) => SYS_EX.some((e) => e.id === id) || EXT_EX.some((e) => e.id === id);
-export const systemExercise = (id) => SYS_EX.find((e) => e.id === id) || EXT_EX.find((e) => e.id === id) || null;
+export const isSystemExercise = (id) =>
+  SYS_EX.some((e) => e.id === id) || EXT_EX.some((e) => e.id === id) || OPEN_EX.some((e) => e.id === id);
+export const systemExercise = (id) =>
+  SYS_EX.find((e) => e.id === id) || EXT_EX.find((e) => e.id === id) || OPEN_EX.find((e) => e.id === id) || null;
 export const curatedCount = () => SYS_EX.length;
 
 export function categories() {

@@ -1,5 +1,5 @@
 /* Forge service worker — precache app shell, stale-while-revalidate for the rest. */
-const VERSION = 'forge-v1.3.0';
+const VERSION = 'forge-v1.4.0';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 /* Exercise photos and GIFs are large (~110 MB in total), so they are cached on
@@ -16,7 +16,8 @@ const PRECACHE = [
   './js/lib/stats.js', './js/lib/idb.js', './js/lib/notify.js', './js/lib/ui.js',
   './js/lib/components.js', './js/lib/install.js', './js/lib/theme.js',
   './js/data/taxonomy.js', './js/data/exercises.js', './js/data/splits.js',
-  './js/data/exercises-extended.json', './js/data/curated-media.json', './js/data/app-config.json', './js/lib/media.js',
+  './js/data/exercises-extended.json', './js/data/curated-media.json', './js/data/app-config.json',
+  './js/data/exercises-open.json', './js/data/open-media.json', './js/lib/media.js',
   './js/views/home.js', './js/views/exercises.js', './js/views/exerciseDetail.js',
   './js/views/exerciseEdit.js', './js/views/workouts.js', './js/views/builder.js',
   './js/views/active.js', './js/views/splits.js', './js/views/splitDetail.js',

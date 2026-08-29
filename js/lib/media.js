@@ -17,26 +17,32 @@
 import { get, mediaAvailable } from '../store.js';
 
 export const mediaBase = () => (get().settings.mediaBase || '').trim();
-/* A build published without the media folder reports it, so we never emit
-   requests for files that are not there. */
-export const mediaEnabled = () => !!mediaBase() && mediaAvailable();
+/** Public-domain photos ship in every build; the licensed set may not. */
+const usable = (ex) => !!mediaBase() && (ex?.media?.open ? true : mediaAvailable());
+export const mediaEnabled = () => !!mediaBase();
 
 const join = (base, path) =>
   `${base.replace(/\/+$/, '')}/${String(path).replace(/^\/+/, '')}`;
 
 /** Animated media (GIF) for an exercise, or null when unavailable. */
 export function gifFor(ex) {
-  const base = mediaEnabled() ? mediaBase() : '';
-  if (!base || !ex?.media?.gif) return null;
-  return join(base, ex.media.gif);
+  if (!usable(ex) || !ex?.media?.gif) return null;
+  return join(mediaBase(), ex.media.gif);
+}
+/** Photo pair (start/end) for public-domain entries — alternated to animate. */
+export function framesFor(ex) {
+  if (!usable(ex) || !ex?.media?.images?.length) return null;
+  return ex.media.images.map((p) => join(mediaBase(), p));
 }
 /** Still image for an exercise, or null. */
 export function imageFor(ex) {
-  const base = mediaEnabled() ? mediaBase() : '';
-  if (!base || !ex?.media?.image) return null;
-  return join(base, ex.media.image);
+  if (!usable(ex) || !ex?.media?.image) return null;
+  return join(mediaBase(), ex.media.image);
 }
-export const hasMedia = (ex) => !!(mediaEnabled() && (ex?.media?.gif || ex?.media?.image));
+export const hasMedia = (ex) => !!(usable(ex) && (ex?.media?.gif || ex?.media?.image));
 
 /** Attribution required by the media licence. Rendered wherever media shows. */
 export const ATTRIBUTION = '© Gym visual — https://gymvisual.com/';
+/** Public-domain photos need no attribution, but crediting the source is polite. */
+export const OPEN_CREDIT = 'Public domain — free-exercise-db';
+export const creditFor = (ex) => (ex?.media?.open ? OPEN_CREDIT : ATTRIBUTION);

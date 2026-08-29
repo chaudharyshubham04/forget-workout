@@ -422,7 +422,24 @@ svg{display:block}
   background:rgba(0,0,0,.45);color:#fff;backdrop-filter:blur(6px);letter-spacing:.03em}
 .demo-ctl{position:absolute;bottom:10px;right:10px;display:flex;gap:6px}
 .demo.demo-media{background:#fff;border-color:var(--line)}
+/* Photographs: a neutral backdrop so letterboxing reads as a frame, not a
+   white border. Never `cover` — cropping an exercise photo can hide the form. */
+.demo.demo-photo{background:#0f1218}
+.demo.demo-photo .demo-attr{background:rgba(12,14,19,.72);color:#c9d1de}
+.demo.demo-photo .demo-badge{background:rgba(255,255,255,.16)}
 .demo.demo-media img{width:100%;height:100%;object-fit:contain}
+/* Two-photo demonstrations: cross-fade start and end position on a loop. */
+.demo-frames{position:absolute;inset:0}
+.demo-frames .frame{position:absolute;inset:0;opacity:0;
+  animation:frameFade var(--frame-dur,1.4s) steps(1,end) infinite}
+.demo-frames .frame.hidden{animation:none;opacity:0}
+.demo-frames .frame:first-child{opacity:1}
+@keyframes frameFade{0%,50%{opacity:1}50.01%,100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){
+  .demo-frames .frame{animation:none}
+  .demo-frames .frame:first-child{opacity:1}
+  .demo-frames .frame:not(:first-child){opacity:0}
+}
 .demo-attr{position:absolute;left:8px;bottom:8px;right:52px;font-size:9.5px;font-weight:700;
   letter-spacing:.01em;color:#5b6472;background:rgba(255,255,255,.82);backdrop-filter:blur(4px);
   padding:3px 8px;border-radius:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
