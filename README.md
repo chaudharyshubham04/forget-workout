@@ -180,7 +180,7 @@ workers need a secure origin; every option below gives you one free).
 | Host | How | Notes |
 |---|---|---|
 | **GitHub Pages** | Push to `main` — [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) tests, builds and publishes | Free, custom domain supported. Enable Pages → Source: *GitHub Actions* |
-| **Cloudflare Pages** | Connect the repo. Build: `node scripts/build.js`, output: `dist` | Unlimited bandwidth on the free plan |
+| **Cloudflare Pages** | Connect the repo. Build: `node scripts/build.js`, output: `dist` | Unlimited bandwidth on the free plan — see below |
 | **Netlify** | Connect the repo — [`netlify.toml`](netlify.toml) is already configured | 100 GB/month free |
 | **Vercel** | Connect the repo. Build: `node scripts/build.js`, output: `dist` | 100 GB/month free |
 | **Anywhere** | `node scripts/build.js` then upload `dist/` | Works from a subdirectory too |
@@ -188,6 +188,28 @@ workers need a secure origin; every option below gives you one free).
 The build sets cache headers, an SPA fallback and a `.nojekyll` marker for you.
 All paths are relative, so serving from `example.com/forge/` works exactly the
 same as from a root domain.
+
+### Cloudflare Pages, step by step
+
+1. <https://dash.cloudflare.com> → **Workers & Pages** → **Create** →
+   **Pages** → **Connect to Git**, and pick the repository.
+2. Build settings:
+   - Framework preset — **None**
+   - Build command — `node scripts/build.js`
+   - Build output directory — `dist`
+   - Root directory — leave empty
+3. **Save and Deploy.** First build takes about a minute; you get a
+   `<project>.pages.dev` URL, HTTPS included.
+
+Every push to `main` redeploys automatically, and pull requests get their own
+preview URL. `.node-version` pins the builder to Node 20.
+
+Cloudflare reads `_headers` and `_redirects` from `dist/` — both are written by
+the build, so caching and the SPA fallback are already handled. It ignores
+`netlify.toml`, which is only there for Netlify.
+
+To add your own domain: project → **Custom domains** → add it. DNS is
+configured for you if the domain is already on Cloudflare.
 
 ### What gets published, and what doesn't
 

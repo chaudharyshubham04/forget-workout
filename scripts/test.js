@@ -99,8 +99,8 @@ console.log('\nImported library (exercises-dataset)');
   const M = new Set(tax.MUSCLES.map((m) => m.id));
   const E = new Set(tax.EQUIPMENT.map((e) => e.id));
   const Ca = new Set(tax.CATEGORIES.map((c) => c.id));
-  const { poseIds } = await import('../js/lib/motion.js');
-  const P = new Set(poseIds());
+  const pose = await import('../js/lib/motion.js');
+  const P = new Set(pose.poseIds());
   t('every imported exercise maps onto the app taxonomy', () => {
     for (const e of ext) {
       for (const m of [...e.primaryMuscles, ...e.secondaryMuscles]) ok(M.has(m), `${e.id}: muscle ${m}`);
@@ -119,14 +119,26 @@ console.log('\nImported library (exercises-dataset)');
     eq(clash.length, 0, clash.map((e) => e.id).join());
     eq(new Set(ext.map((e) => e.id)).size, ext.length, 'imported ids are unique');
   });
-  t('the media folder is installed and every reference resolves', () => {
-    ok(existsSync('media/images'), 'media/images is present');
-    ok(existsSync('media/videos'), 'media/videos is present');
-    /* Sample rather than stat 2,648 files on every run. */
-    const sample = ext.filter((_, i) => i % 97 === 0);
-    for (const e of sample) {
-      ok(existsSync(`media/${e.media.image}`), `missing image for ${e.id}`);
-      ok(existsSync(`media/${e.media.gif}`), `missing gif for ${e.id}`);
+  /* The media is git-ignored (it is licensed separately), so CI checkouts do not
+     have it. Verify whichever situation we are in — never assume it is present. */
+  const mediaInstalled = existsSync('media/images') && existsSync('media/videos');
+  t(mediaInstalled
+    ? 'installed media resolves for every reference'
+    : 'the app is complete without the separately-licensed media', () => {
+    if (mediaInstalled) {
+      /* Sample rather than stat 2,648 files on every run. */
+      const sample = ext.filter((_, i) => i % 97 === 0);
+      for (const e of sample) {
+        ok(existsSync(`media/${e.media.image}`), `missing image for ${e.id}`);
+        ok(existsSync(`media/${e.media.gif}`), `missing gif for ${e.id}`);
+      }
+    } else {
+      const { poseIds } = pose;
+      const poses = new Set(poseIds());
+      ok(ext.every((e) => poses.has(e.pose)),
+        'every exercise still has an SVG animation to fall back on');
+      ok(ext.every((e) => e.instructions.length),
+        'every exercise still has instructions');
     }
   });
   t('the media licence and attribution ship alongside it', () => {
