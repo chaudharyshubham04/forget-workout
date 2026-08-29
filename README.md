@@ -219,8 +219,20 @@ the deployed app uses its own SVG animations, which are part of this project and
 carry no restrictions. The build writes a flag telling the app the media is
 absent, so it never requests missing files.
 
-If you hold a Gym visual licence, `node scripts/build.js --with-media` includes
-them (139 MB). Read [ATTRIBUTION.md](ATTRIBUTION.md) before you do.
+#### Switching the media on later
+
+Once you hold a licence from <https://gymvisual.com/>, publishing it is three
+steps:
+
+1. Delete the `media/images/` and `media/videos/` lines from `.gitignore`, then
+   commit the files (137 MB).
+2. Change the host's build command to `node scripts/build.js --with-media`.
+3. Keep the "© Gym visual — https://gymvisual.com/" attribution the app renders
+   on every frame — their terms require it.
+
+Nothing else changes: the app already prefers the media whenever it is present
+and falls back to the SVG animations when it is not. Read
+[ATTRIBUTION.md](ATTRIBUTION.md) first.
 
 ## Architecture
 
